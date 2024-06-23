@@ -1,0 +1,120 @@
+#!/bin/bash -norc
+scriptpath="$( cd "$(dirname "$0")" ; pwd -P )"
+PYTHON_PATH=$(which python)
+INPUT="$@"
+echo "COMMAND: $(basename $0) $@" >> "${PWD}/output"
+
+# Default values
+SLURM_TIME="240:00:00"
+SLURM_PARTITION="q24,q28,q36,q40,q48,q64"
+PYTHON_ARGS=()
+XYZ=0
+IRC=0
+PKL=0
+INFO=0
+RESTART=0
+PAR_FLAG=0
+COLLECT=0
+time_arg="" 
+PICKLE=0
+
+for arg in "$@"; do
+  PYTHON_ARGS+=("$arg")
+done
+if [[ "$SBATCH_PREFIX" =~ [^[:space:]] ]]; then
+  # If SBATCH_PREFIX contains non-space characters, add it to PYTHON_ARGS
+  PYTHON_ARGS+=("$SBATCH_PREFIX")
+fi
+
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help|-help)
+      "$PYTHON_PATH" "$scriptpath/DATS.py" -h
+      exit 0
+      ;;
+    -loc|-collect)
+      "$PYTHON_PATH" "$scriptpath/DATS.py" "${PYTHON_ARGS[@]}" | tee -a "${PWD}/output"
+      exit 0
+      ;;
+    -test|-info|-pickle|-init|-plot|-movie)
+      "$PYTHON_PATH" "$scriptpath/DATS.py" "${PYTHON_ARGS[@]}"
+      exit 0
+      ;;
+    *.xyz)
+      input_file="$arg"
+      XYZ=1
+      ;;
+    -smiles)
+      XYZ=1
+      ;;
+    -restart)
+      RESTART=1
+      ;;
+    -IRC)
+      IRC=1
+      ;;
+    *.pkl)
+      PKL=1
+      ;;
+    -time)
+      time_arg="$arg"
+      ;;
+    -par)
+      PAR_FLAG=1
+      ;;
+    *)
+      if [[ "$time_arg" == "-time" ]]; then
+        SLURM_TIME="$arg"
+        time_arg=""
+      elif [[ "$PAR_FLAG" -eq 1 ]]; then
+        SLURM_PARTITION="$arg"
+        PAR_FLAG=0
+        if [[ "$SLURM_PARTITION" == "qtest" ]]; then
+            SLURM_TIME="1:00:00"
+        fi
+      fi
+      ;;
+  esac
+done
+
+submit_job() {
+  local directory=$1
+sbatch <<EOF
+#!/bin/bash
+#SBATCH --job-name=JKTS_$directory
+#SBATCH --output=JKTS_%j
+#SBATCH --time=$SLURM_TIME
+#SBATCH --partition=$SLURM_PARTITION
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=2000
+#SBATCH $SBATCH_PREFIX
+
+write_timeout_to_log() {
+  echo "Job ran out of time at \$(date)" >> log
+}
+
+trap 'write_timeout_to_log' SIGTERM
+
+source ~/.JKCSusersetup.txt
+"$PYTHON_PATH" "$scriptpath/DATS.py" "${PYTHON_ARGS[@]}" 
+
+EOF
+}
+
+
+if [[ "$XYZ" -gt 0 ]]; then
+  "$PYTHON_PATH" "$scriptpath/DATS.py" "${PYTHON_ARGS[@]}" -init
+  for dir in */; do
+      dir_name=${dir%/}
+      if [[ $dir_name =~ _H[0-9]+$ ]] || [[ $dir_name == "reactants" ]] || [[ $dir_name == "products" ]]; then
+        cd $dir_name
+        submit_job "$dir_name"
+        cd ..
+      fi
+  done
+elif [ "$RESTART" -gt 0 ] || [ "$IRC" -gt 0 ]; then
+  submit_job $(basename "$PWD")
+else
+  echo "Incorrect input argument"
+fi

@@ -38,8 +38,6 @@ Reactants and Products Workflow
 
 .. figure:: JKTS_workflow.png
    :align: center
-   :height: 100px
-   :width: 200px
 Using JKTS
 ==========
 

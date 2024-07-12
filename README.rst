@@ -36,7 +36,7 @@ Reactants and Products Workflow
 #. Geometry optimization of the conformers.
 #. Final energy refinement with DLPNO-CCSD(T) calculations.
 
-.. figure:: JKTS_workflow.pdf
+.. figure:: JKTS_workflow.png
    :align: center
    :height: 100px
    :width: 200px

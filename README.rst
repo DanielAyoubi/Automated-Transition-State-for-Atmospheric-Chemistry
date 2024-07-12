@@ -36,9 +36,10 @@ Reactants and Products Workflow
 #. Geometry optimization of the conformers.
 #. Final energy refinement with DLPNO-CCSD(T) calculations.
 
-.. note::
-   Insert a workflow diagram here.
-
+.. figure:: JKTS_workflow.pdf
+   :align: center
+   :height: 100px
+   :width: 200px
 Using JKTS
 ==========
 
@@ -64,8 +65,10 @@ Post conformer sampling, the default subsequent step is geometry relaxation. For
 
 The final step involves an energy correction using DLPNO-CCSD(T) [#]_ [#]_, applied to the geometries derived from the geometry relaxations of product and reactant structures, as well as TS structures from first order saddle point optimization. Utilizing the optimized geometries' thermochemical contributions and single-point energy from DLPNO calculations, the rate constant for specific abstraction sites is calculated using the MC-TST equation:
 
-.. math::
-   k = \kappa \frac{k_b T}{h} \left( \frac{\sum_{i}^{\text{TS conf}} \exp\left(-\frac{\Delta_{E_i}}{k_b T}\right) Q_{\text{TS},i}}{\sum_{j}^{\text{reac conf}} \exp\left(-\frac{\Delta_{E_j}}{k_b T}\right) Q_{\text{reac},j}} \right) \exp\left(-\frac{E_{\text{TS},0} - E_{\text{R},0}}{k_b T}\right)
+.. latex::
+   \begin{equation}
+     k = \kappa \frac{k_b T}{h} \left( \frac{\sum_{i}^{\text{TS conf}} \exp\left(-\frac{\Delta_{E_i}}{k_b T}\right) Q_{\text{TS},i}}{\sum_{j}^{\text{reac conf}} \exp\left(-\frac{\Delta_{E_j}}{k_b T}\right) Q_{\text{reac},j}} \right) \exp\left(-\frac{E_{\text{TS},0} - E_{\text{R},0}}{k_b T}\right)
+   \end{equation}
    
 
 .. _CREST: https://crest-lab.github.io/crest-docs/

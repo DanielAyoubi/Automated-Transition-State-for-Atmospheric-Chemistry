@@ -1,5 +1,3 @@
-# Automated-Transition-State-for-Atmospheric-Chemistry
-
 ============================================
 About & Usage
 ============================================
